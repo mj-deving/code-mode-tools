@@ -38,7 +38,7 @@ jest.mock('@modelcontextprotocol/sdk/server/stdio.js', () => ({
   StdioServerTransport: jest.fn().mockImplementation(() => ({})),
 }), { virtual: true });
 
-import { createServer } from '../src/index';
+import { createEngine, createServer } from '../src/index';
 import type { ServerConfig } from '../src/config';
 
 const validConfig: ServerConfig = {
@@ -103,6 +103,13 @@ describe('server', () => {
 
     await cleanup();
 
+    expect(mockEngine.close).toHaveBeenCalled();
+  });
+
+  test('closes engine if tool source registration throws', async () => {
+    mockEngine.registerToolSource.mockRejectedValueOnce(new Error('boom'));
+
+    await expect(createEngine(validConfig)).rejects.toThrow('boom');
     expect(mockEngine.close).toHaveBeenCalled();
   });
 });

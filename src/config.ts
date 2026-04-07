@@ -64,15 +64,14 @@ import * as path from 'path';
 import * as os from 'os';
 
 /**
- * Auto-discover config file. Search order:
- * 1. ./tools.json (CWD)
- * 2. ~/.config/code-mode-tools/tools.json
- * 3. ~/.config/code-mode-tools/config.json
+ * Auto-discover config file from the user config directory only.
+ * Search order:
+ * 1. ~/.config/code-mode-tools/tools.json
+ * 2. ~/.config/code-mode-tools/config.json
  * Returns the first path that exists, or undefined.
  */
 export function discoverConfig(): string | undefined {
   const candidates = [
-    path.resolve('tools.json'),
     path.join(os.homedir(), '.config', 'code-mode-tools', 'tools.json'),
     path.join(os.homedir(), '.config', 'code-mode-tools', 'config.json'),
   ];
@@ -87,7 +86,7 @@ export function discoverConfig(): string | undefined {
 
 /**
  * Parse CLI arguments and load config. Returns merged ServerConfig.
- * If --config is not provided, auto-discovers from CWD or ~/.config/.
+ * If --config is not provided, auto-discovers from ~/.config/code-mode-tools/.
  */
 export function parseArgs(argv: string[]): ServerConfig {
   let configPath: string | undefined;
@@ -122,7 +121,7 @@ export function parseArgs(argv: string[]): ServerConfig {
   }
   if (!configPath) {
     throw new Error(
-      'No config found. Provide --config <path>, or place tools.json in CWD or ~/.config/code-mode-tools/',
+      'No config found. Provide --config <path>, or place tools.json/config.json in ~/.config/code-mode-tools/',
     );
   }
 

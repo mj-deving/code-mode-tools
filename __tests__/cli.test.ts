@@ -140,18 +140,22 @@ describe('CLI', () => {
       expect(parsed.error).toContain('ReferenceError');
     });
 
-    test('passes timeout and enableTrace from config', async () => {
+    test('passes timeout, memoryLimit, and enableTrace from config', async () => {
       const engine = createMockEngine();
       await runExec(engine as any, 'return 1;', {
         toolSources: [],
         timeout: 5000,
-        memoryLimit: 128,
+        memoryLimit: 256,
         enableTrace: true,
       });
 
       expect(engine.execute).toHaveBeenCalledWith(
         'return 1;',
-        expect.objectContaining({ timeout: 5000, enableTrace: true }),
+        expect.objectContaining({
+          timeout: 5000,
+          memoryLimit: 256,
+          enableTrace: true,
+        }),
       );
     });
   });

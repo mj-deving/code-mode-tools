@@ -69,6 +69,18 @@ describe('tool handlers', () => {
       );
     });
 
+    test('respects memoryLimit override parameter', async () => {
+      const engine = createMockEngine();
+      const handler = createExecuteHandler(engine as any);
+
+      await handler({ code: 'return 1', memoryLimit: 256 });
+
+      expect(engine.execute).toHaveBeenCalledWith(
+        'return 1',
+        expect.objectContaining({ memoryLimit: 256 }),
+      );
+    });
+
     test('respects enableTrace parameter', async () => {
       const engine = createMockEngine({
         execute: jest.fn().mockResolvedValue({
@@ -125,6 +137,25 @@ describe('tool handlers', () => {
       // The description should be used in the MCP tool definition
       expect(toolDescription).toContain('declare function');
       expect(toolDescription).toContain('fs_read_file');
+    });
+
+    test('registers memoryLimit as an optional inputSchema parameter', async () => {
+      const engine = createMockEngine();
+      const server = {
+        registerTool: jest.fn(),
+      };
+
+      await registerTools(server, engine as any);
+
+      expect(server.registerTool).toHaveBeenCalledWith(
+        'execute_code_chain',
+        expect.objectContaining({
+          inputSchema: expect.objectContaining({
+            memoryLimit: expect.any(Object),
+          }),
+        }),
+        expect.any(Function),
+      );
     });
   });
 });

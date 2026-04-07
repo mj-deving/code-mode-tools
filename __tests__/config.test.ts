@@ -5,12 +5,20 @@ import { loadConfig, parseArgs, discoverConfig } from '../src/config';
 
 describe('config', () => {
   let tmpDir: string;
+  let originalHome: string | undefined;
 
   beforeEach(() => {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cm-mcp-test-'));
+    originalHome = process.env.HOME;
+    process.env.HOME = tmpDir;
   });
 
   afterEach(() => {
+    if (originalHome === undefined) {
+      delete process.env.HOME;
+    } else {
+      process.env.HOME = originalHome;
+    }
     fs.rmSync(tmpDir, { recursive: true, force: true });
   });
 
@@ -71,14 +79,61 @@ describe('config', () => {
   });
 
   describe('discoverConfig', () => {
+    test('checks only ~/.config/code-mode-tools candidates', () => {
+      try {
+        jest.resetModules();
+        const statSync = jest.fn(() => {
+          throw new Error('ENOENT');
+        });
+
+        jest.doMock('fs', () => ({
+          ...jest.requireActual('fs'),
+          statSync,
+        }));
+        jest.doMock('os', () => ({
+          ...jest.requireActual('os'),
+          homedir: () => '/fake/home',
+        }));
+
+        let isolatedDiscoverConfig: typeof discoverConfig;
+        jest.isolateModules(() => {
+          ({ discoverConfig: isolatedDiscoverConfig } = require('../src/config'));
+        });
+
+        expect(isolatedDiscoverConfig!()).toBeUndefined();
+        expect(statSync.mock.calls.map((call: any[]) => String(call[0]))).toEqual([
+          '/fake/home/.config/code-mode-tools/tools.json',
+          '/fake/home/.config/code-mode-tools/config.json',
+        ]);
+        expect(statSync).not.toHaveBeenCalledWith(path.resolve('tools.json'));
+      } finally {
+        jest.dontMock('fs');
+        jest.dontMock('os');
+        jest.resetModules();
+      }
+    });
+
+    test('does not discover tools.json from CWD', () => {
+      const configPath = path.join(tmpDir, 'tools.json');
+      fs.writeFileSync(configPath, JSON.stringify({
+        toolSources: [{ name: 'cwd', call_template_type: 'mcp' }],
+      }));
+
+      const originalCwd = process.cwd();
+      process.chdir(tmpDir);
+      try {
+        expect(discoverConfig()).toBeUndefined();
+      } finally {
+        process.chdir(originalCwd);
+      }
+    });
+
     test('skips directories that match candidate names', () => {
       // Create a directory named tools.json in tmpDir
       const dirPath = path.join(tmpDir, 'tools.json');
       fs.mkdirSync(dirPath);
 
-      // discoverConfig looks at CWD first, but this test validates the
-      // statSync + isFile guard by testing loadConfig behavior:
-      // a directory named tools.json should not be returned as a config file
+      // A directory named tools.json in the CWD should not be returned.
       const originalCwd = process.cwd();
       process.chdir(tmpDir);
       try {
@@ -121,14 +176,14 @@ describe('config', () => {
       expect(config.enableTrace).toBe(true);
     });
 
-    test('auto-discovers tools.json in CWD when --config not provided', () => {
-      // tools.json exists in project root, so parseArgs should succeed
-      const config = parseArgs(['--timeout', '5000']);
-      expect(config.timeout).toBe(5000);
-      expect(config.toolSources).toBeDefined();
+    test('throws when --config is omitted and no user config is present', () => {
+      expect(() => parseArgs(['--timeout', '5000'])).toThrow(/Provide --config <path>/);
     });
 
     test('warns on unknown flags', () => {
+      const configPath = writeConfig('base.json', {
+        toolSources: [{ name: 'x', call_template_type: 'mcp' }],
+      });
       const stderrChunks: string[] = [];
       const originalWrite = process.stderr.write;
       process.stderr.write = ((chunk: string) => {
@@ -137,8 +192,7 @@ describe('config', () => {
       }) as any;
 
       try {
-        // tools.json exists in CWD, so this will succeed but warn
-        parseArgs(['--bogus-flag']);
+        parseArgs(['--config', configPath, '--bogus-flag']);
         const output = stderrChunks.join('');
         expect(output).toContain('Warning: unknown flag --bogus-flag');
       } finally {

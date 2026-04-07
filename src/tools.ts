@@ -33,15 +33,22 @@ export interface McpToolResult {
  */
 export function createExecuteHandler(
   engine: EngineInterface,
-): (args: { code: string; timeout?: number; enableTrace?: boolean }) => Promise<McpToolResult> {
+): (args: {
+  code: string;
+  timeout?: number;
+  memoryLimit?: number;
+  enableTrace?: boolean;
+}) => Promise<McpToolResult> {
   return async (args) => {
-    const { code, timeout, enableTrace } = args;
+    const { code, timeout, memoryLimit, enableTrace } = args;
 
     const options: Partial<{
       timeout: number;
+      memoryLimit: number;
       enableTrace: boolean;
     }> = {};
     if (timeout !== undefined) options.timeout = timeout;
+    if (memoryLimit !== undefined) options.memoryLimit = memoryLimit;
     if (enableTrace !== undefined) options.enableTrace = enableTrace;
 
     const execResult = await engine.execute(code, options);
@@ -117,6 +124,10 @@ export async function registerTools(
           .number()
           .optional()
           .describe('Execution timeout in milliseconds (default: 30000)'),
+        memoryLimit: z
+          .number()
+          .optional()
+          .describe('Memory limit in megabytes (default: 128)'),
         enableTrace: z
           .boolean()
           .optional()

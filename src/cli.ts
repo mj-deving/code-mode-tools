@@ -117,6 +117,7 @@ export async function runExec(
   const result = await handler({
     code,
     timeout: config.timeout,
+    memoryLimit: config.memoryLimit,
     enableTrace: config.enableTrace,
   });
 

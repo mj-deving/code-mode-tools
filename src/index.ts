@@ -44,14 +44,24 @@ export async function createEngine(config: ServerConfig): Promise<{
   const { CodeModeEngine } = await import('code-mode-core');
   const engine: FullEngine = await CodeModeEngine.create();
 
-  // Register tool sources in parallel — fail fast on any failure
-  const registrations = await Promise.all(
-    config.toolSources.map(async (source) => {
-      log(`Registering tool source: ${source.name} (${source.call_template_type})`);
-      const result = await engine.registerToolSource(source);
-      return { source, result };
-    }),
-  );
+  let registrations: Array<{
+    source: ToolSourceConfig;
+    result: Awaited<ReturnType<FullEngine['registerToolSource']>>;
+  }>;
+
+  try {
+    // Register tool sources in parallel — fail fast on any failure
+    registrations = await Promise.all(
+      config.toolSources.map(async (source) => {
+        log(`Registering tool source: ${source.name} (${source.call_template_type})`);
+        const result = await engine.registerToolSource(source);
+        return { source, result };
+      }),
+    );
+  } catch (error) {
+    await engine.close();
+    throw error;
+  }
 
   for (const { source, result } of registrations) {
     if (!result.success) {
