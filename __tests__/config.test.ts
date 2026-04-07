@@ -100,8 +100,11 @@ describe('config', () => {
       expect(config.enableTrace).toBe(true);
     });
 
-    test('throws when --config is missing', () => {
-      expect(() => parseArgs(['--timeout', '5000'])).toThrow(/--config/i);
+    test('auto-discovers tools.json in CWD when --config not provided', () => {
+      // tools.json exists in project root, so parseArgs should succeed
+      const config = parseArgs(['--timeout', '5000']);
+      expect(config.timeout).toBe(5000);
+      expect(config.toolSources).toBeDefined();
     });
   });
 });
