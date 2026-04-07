@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * code-mode-mcp-server — MCP server for code-mode sandbox execution.
+ * code-mode-tools — MCP server and CLI for code-mode sandbox execution.
  *
  * Exposes CodeModeEngine as an MCP server with stdio transport.
  * All logging goes to stderr. Stdout is reserved for MCP JSON-RPC protocol.
@@ -20,7 +20,7 @@ interface FullEngine extends EngineInterface {
 }
 
 function log(msg: string): void {
-  process.stderr.write(`[code-mode-mcp] ${msg}\n`);
+  process.stderr.write(`[code-mode-tools] ${msg}\n`);
 }
 
 /**
@@ -61,8 +61,8 @@ export async function createServer(config: ServerConfig): Promise<{
   // Create MCP server
   const { McpServer } = await import('@modelcontextprotocol/sdk/server/mcp.js');
   const server = new McpServer({
-    name: 'code-mode-mcp-server',
-    version: '0.1.0',
+    name: 'code-mode-tools',
+    version: '0.2.0',
   });
 
   // Register tools (uses dynamic tool descriptions from engine)

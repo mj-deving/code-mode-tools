@@ -1,11 +1,11 @@
 {
-  "name": "code-mode-mcp-server",
-  "version": "0.1.0",
+  "name": "code-mode-tools",
+  "version": "0.2.0",
   "description": "MCP server for code-mode — execute TypeScript code chains with pre-configured tools in an isolated sandbox",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "code-mode-mcp-server": "dist/index.js"
+    "code-mode-tools": "dist/index.js"
   },
   "scripts": {
     "build": "tsc",

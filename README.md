@@ -1,4 +1,4 @@
-# code-mode-mcp-server
+# code-mode-tools
 
 MCP server that exposes [code-mode](https://github.com/mj-deving/n8n-nodes-utcp-codemode) sandbox execution as tools for any MCP-compatible client.
 
@@ -8,7 +8,7 @@ LLMs write TypeScript code that chains tool calls in an isolated sandbox — ach
 
 ```bash
 # Install globally
-npm install -g code-mode-mcp-server
+npm install -g code-mode-tools
 
 # Create a config file with your tool sources
 cat > tools.json << 'EOF'
@@ -34,7 +34,7 @@ cat > tools.json << 'EOF'
 EOF
 
 # Run the server
-code-mode-mcp-server --config ./tools.json
+code-mode-tools --config ./tools.json
 ```
 
 ## MCP Tools
@@ -90,7 +90,7 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
 {
   "mcpServers": {
     "code-mode": {
-      "command": "code-mode-mcp-server",
+      "command": "code-mode-tools",
       "args": ["--config", "/path/to/tools.json"]
     }
   }
@@ -105,7 +105,7 @@ Add to `.mcp.json` in your project root:
 {
   "mcpServers": {
     "code-mode": {
-      "command": "code-mode-mcp-server",
+      "command": "code-mode-tools",
       "args": ["--config", "./tools.json"]
     }
   }
@@ -120,7 +120,7 @@ Add to `.cursor/mcp.json`:
 {
   "mcpServers": {
     "code-mode": {
-      "command": "code-mode-mcp-server",
+      "command": "code-mode-tools",
       "args": ["--config", "./tools.json"]
     }
   }
@@ -135,7 +135,7 @@ Add to `.cursor/mcp.json`:
 ## Architecture
 
 ```
-MCP Client → stdio → code-mode-mcp-server
+MCP Client → stdio → code-mode-tools
                         ├── McpServer (2 tools)
                         ├── CodeModeEngine (persisted)
                         │   └── Tool sources (MCP servers, HTTP APIs)

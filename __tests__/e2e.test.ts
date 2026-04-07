@@ -108,7 +108,7 @@ describe('E2E: MCP server protocol', () => {
     const resp = await waitForResponse(proc, 1);
     expect(resp.jsonrpc).toBe('2.0');
     expect(resp.id).toBe(1);
-    expect(resp.result.serverInfo.name).toBe('code-mode-mcp-server');
+    expect(resp.result.serverInfo.name).toBe('code-mode-tools');
     expect(resp.result.capabilities.tools).toBeDefined();
 
     proc.kill('SIGTERM');
